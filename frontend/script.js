@@ -33,12 +33,12 @@ async function login() {
         if (data.success) {
 
             document
-                .getElementById("loginPage")
-                .classList.add("hidden");
+               .getElementById("loginPage")
+               .classList.add("hidden");
 
             document
-                .getElementById("mainApp")
-                .classList.remove("hidden");
+               .getElementById("mainApp")
+               .classList.remove("hidden");
 
             loadDashboard();
             loadBooks();
@@ -64,12 +64,12 @@ async function login() {
 function logout() {
 
     document
-        .getElementById("mainApp")
-        .classList.add("hidden");
+       .getElementById("mainApp")
+       .classList.add("hidden");
 
     document
-        .getElementById("loginPage")
-        .classList.remove("hidden");
+       .getElementById("loginPage")
+       .classList.remove("hidden");
 }
 
 /* ================= NAVIGATION ================= */
@@ -77,14 +77,14 @@ function logout() {
 function showSection(sectionName) {
 
     document
-        .querySelectorAll(".section")
-        .forEach(section => {
+       .querySelectorAll(".section")
+       .forEach(section => {
             section.classList.add("hidden");
         });
 
     document
-        .getElementById(sectionName)
-        .classList.remove("hidden");
+       .getElementById(sectionName)
+       .classList.remove("hidden");
 
     if (sectionName === "dashboard")
         loadDashboard();
@@ -118,19 +118,19 @@ async function loadDashboard() {
         await response.json();
 
     document.getElementById("totalBooks")
-        .innerText = data.totalBooks;
+       .innerText = data.totalBooks;
 
     document.getElementById("availableBooks")
-        .innerText = data.availableBooks;
+       .innerText = data.availableBooks;
 
     document.getElementById("issuedBooks")
-        .innerText = data.issuedBooks;
+       .innerText = data.issuedBooks;
 
     document.getElementById("totalMembers")
-        .innerText = data.totalMembers;
+       .innerText = data.totalMembers;
 
     document.getElementById("totalFine")
-        .innerText = data.totalFine;
+       .innerText = data.totalFine;
 }
 
 /* ================= BOOKS ================= */
@@ -165,7 +165,7 @@ function displayBooks(books) {
 
         const status =
             book.available > 0
-                ? "Available ✅"
+               ? "Available ✅"
                 : "Not Available ❌";
 
         container.innerHTML += `
@@ -203,9 +203,9 @@ function searchBooks() {
 
     const value =
         document
-        .getElementById("bookSearch")
-        .value
-        .toLowerCase();
+       .getElementById("bookSearch")
+       .value
+       .toLowerCase();
 
     const filtered =
         allBooks.filter(book =>
@@ -222,15 +222,15 @@ function searchBooks() {
 function openBookForm() {
 
     document
-        .getElementById("bookModal")
-        .classList.remove("hidden");
+       .getElementById("bookModal")
+       .classList.remove("hidden");
 }
 
 function closeBookForm() {
 
     document
-        .getElementById("bookModal")
-        .classList.add("hidden");
+       .getElementById("bookModal")
+       .classList.add("hidden");
 }
 
 async function addBook() {
@@ -247,7 +247,7 @@ async function addBook() {
     const quantity =
         document.getElementById("newQuantity").value;
 
-    if (!title || !author || !category || !quantity) {
+    if (!title ||!author ||!category ||!quantity) {
 
         alert("Please fill all fields");
 
@@ -340,15 +340,15 @@ async function loadMembers() {
 function openMemberForm() {
 
     document
-        .getElementById("memberModal")
-        .classList.remove("hidden");
+       .getElementById("memberModal")
+       .classList.remove("hidden");
 }
 
 function closeMemberForm() {
 
     document
-        .getElementById("memberModal")
-        .classList.add("hidden");
+       .getElementById("memberModal")
+       .classList.add("hidden");
 }
 
 async function addMember() {
@@ -362,7 +362,7 @@ async function addMember() {
     const phone =
         document.getElementById("memberPhone").value;
 
-    if (!name || !email || !phone) {
+    if (!name ||!email ||!phone) {
 
         alert("Please fill all fields");
 
@@ -422,8 +422,8 @@ async function loadBooksForIssue() {
         `<option value="">Select Book</option>`;
 
     books
-        .filter(book => book.available > 0)
-        .forEach(book => {
+       .filter(book => book.available > 0)
+       .forEach(book => {
 
             select.innerHTML += `
                 <option value="${book.id}">
@@ -472,13 +472,70 @@ async function issueBook() {
     const memberId =
         document.getElementById("issueMember").value;
 
-    if (!bookId || !memberId) {
+    if (!bookId ||!memberId) {
 
         alert("Please select book and member");
 
         return;
     }
 
+    // Browser la save panna puthu book / member ah?
+    let savedBooks = JSON.parse(localStorage.getItem("myBooks") || "[]");
+    let savedMembers = JSON.parse(localStorage.getItem("myMembers") || "[]");
+
+    let localBook = savedBooks.find(b => String(b.id) === String(bookId));
+    let localMember = savedMembers.find(m => String(m.id) === String(memberId));
+
+    // Puthu book/member na - Browser la ye Issue pannidu
+    if (localBook || localMember) {
+
+        if (localBook) {
+            if (localBook.available <= 0) {
+                alert("Book not available!");
+                return;
+            }
+            localBook.available = localBook.available - 1;
+            localStorage.setItem("myBooks", JSON.stringify(savedBooks));
+        }
+
+        let bookTitle = localBook? localBook.title : "Book";
+        let memberName = localMember? localMember.name : "Member";
+
+        if (!localBook) {
+            let res = await fetch(`${API}/books`);
+            let books = await res.json();
+            let b = books.find(x => String(x.id) === String(bookId));
+            if (b) bookTitle = b.title;
+        }
+        if (!localMember) {
+            let res = await fetch(`${API}/members`);
+            let members = await res.json();
+            let m = members.find(x => String(x.id) === String(memberId));
+            if (m) memberName = m.name;
+        }
+
+        let due = new Date();
+        due.setDate(due.getDate() + 14);
+
+        let myTrans = JSON.parse(localStorage.getItem("myTransactions") || "[]");
+        myTrans.push({
+            id: Date.now(),
+            bookTitle: bookTitle,
+            memberName: memberName,
+            issueDate: new Date().toISOString().split('T')[0],
+            dueDate: due.toISOString().split('T')[0],
+            status: "Issued"
+        });
+        localStorage.setItem("myTransactions", JSON.stringify(myTrans));
+
+        alert("Book issued successfully! 📖\nDue Date: " + due.toISOString().split('T')[0]);
+
+        loadDashboard();
+        loadBooksForIssue();
+        return;
+    }
+
+    // Pazhaya book/member na - Backend ku anupu
     const response =
         await fetch(`${API}/issue`, {
 
@@ -524,6 +581,10 @@ async function loadTransactions() {
 
     const transactions =
         await response.json();
+
+    // Browser la save panna transactions ah yum serthu kaatu
+    let myTrans = JSON.parse(localStorage.getItem("myTransactions") || "[]");
+    myTrans.forEach(t => transactions.push(t));
 
     const container =
         document.getElementById("transactionList");
@@ -587,6 +648,28 @@ async function loadTransactions() {
 }
 
 async function returnBook(id) {
+
+    // Browser la issue panna book ah?
+    let myTrans = JSON.parse(localStorage.getItem("myTransactions") || "[]");
+    let localTrans = myTrans.find(t => String(t.id) === String(id));
+
+    if (localTrans) {
+        localTrans.status = "Returned";
+        localStorage.setItem("myTransactions", JSON.stringify(myTrans));
+
+        // Book available ah thirumba kootu
+        let savedBooks = JSON.parse(localStorage.getItem("myBooks") || "[]");
+        let b = savedBooks.find(x => x.title === localTrans.bookTitle);
+        if (b) {
+            b.available = b.available + 1;
+            localStorage.setItem("myBooks", JSON.stringify(savedBooks));
+        }
+
+        alert("Book returned successfully! 📚\nFine: ₹0");
+        loadTransactions();
+        loadDashboard();
+        return;
+    }
 
     const response =
         await fetch(`${API}/return`, {
