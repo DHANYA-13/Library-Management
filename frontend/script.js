@@ -145,6 +145,12 @@ async function loadBooks() {
     allBooks =
         await response.json();
 
+    // Browser la save panna books ah yum serthu kaatu
+    let savedBooks = JSON.parse(localStorage.getItem("myBooks") || "[]");
+    savedBooks.forEach(s => {
+        if (!allBooks.find(b => b.title === s.title)) allBooks.push(s);
+    });
+
     displayBooks(allBooks);
 }
 
@@ -265,6 +271,18 @@ async function addBook() {
 
     });
 
+    // Browser la yum save pannu - Vercel azhichalum irukkum
+    let savedBooks = JSON.parse(localStorage.getItem("myBooks") || "[]");
+    savedBooks.push({
+        id: Date.now(),
+        title,
+        author,
+        category,
+        quantity: Number(quantity),
+        available: Number(quantity)
+    });
+    localStorage.setItem("myBooks", JSON.stringify(savedBooks));
+
     alert("Book added successfully! 📚");
 
     closeBookForm();
@@ -367,7 +385,7 @@ async function addMember() {
 
     });
 
-    // Browser la yum save pannu - Vercel azhichalum irukkum
+    // Browser la yum save pannu
     let saved = JSON.parse(localStorage.getItem("myMembers") || "[]");
     saved.push({ id: Date.now(), name, email, phone });
     localStorage.setItem("myMembers", JSON.stringify(saved));
@@ -388,8 +406,14 @@ async function loadBooksForIssue() {
     const response =
         await fetch(`${API}/books`);
 
-    const books =
+    let books =
         await response.json();
+
+    // Browser books ah yum serthu kaatu
+    let savedBooks = JSON.parse(localStorage.getItem("myBooks") || "[]");
+    savedBooks.forEach(s => {
+        if (!books.find(b => b.title === s.title)) books.push(s);
+    });
 
     const select =
         document.getElementById("issueBook");
