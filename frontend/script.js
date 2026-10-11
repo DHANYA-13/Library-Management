@@ -1,6 +1,5 @@
 const API = "/api";
 
-
 /* ================= LOGIN ================= */
 
 async function login() {
@@ -60,7 +59,6 @@ async function login() {
     }
 }
 
-
 /* ================= LOGOUT ================= */
 
 function logout() {
@@ -73,7 +71,6 @@ function logout() {
         .getElementById("loginPage")
         .classList.remove("hidden");
 }
-
 
 /* ================= NAVIGATION ================= */
 
@@ -110,7 +107,6 @@ function showSection(sectionName) {
         loadReport();
 }
 
-
 /* ================= DASHBOARD ================= */
 
 async function loadDashboard() {
@@ -137,7 +133,6 @@ async function loadDashboard() {
         .innerText = data.totalFine;
 }
 
-
 /* ================= BOOKS ================= */
 
 let allBooks = [];
@@ -152,7 +147,6 @@ async function loadBooks() {
 
     displayBooks(allBooks);
 }
-
 
 function displayBooks(books) {
 
@@ -199,7 +193,6 @@ function displayBooks(books) {
     });
 }
 
-
 function searchBooks() {
 
     const value =
@@ -218,7 +211,6 @@ function searchBooks() {
     displayBooks(filtered);
 }
 
-
 /* ================= ADD BOOK ================= */
 
 function openBookForm() {
@@ -228,14 +220,12 @@ function openBookForm() {
         .classList.remove("hidden");
 }
 
-
 function closeBookForm() {
 
     document
         .getElementById("bookModal")
         .classList.add("hidden");
 }
-
 
 async function addBook() {
 
@@ -284,7 +274,6 @@ async function addBook() {
     loadDashboard();
 }
 
-
 /* ================= MEMBERS ================= */
 
 async function loadMembers() {
@@ -292,8 +281,14 @@ async function loadMembers() {
     const response =
         await fetch(`${API}/members`);
 
-    const members =
+    let members =
         await response.json();
+
+    // Browser la save panna members ah yum serthu kaatu
+    let saved = JSON.parse(localStorage.getItem("myMembers") || "[]");
+    saved.forEach(s => {
+        if (!members.find(m => m.email === s.email)) members.push(s);
+    });
 
     const container =
         document.getElementById("memberList");
@@ -322,7 +317,6 @@ async function loadMembers() {
     });
 }
 
-
 /* ================= ADD MEMBER ================= */
 
 function openMemberForm() {
@@ -332,14 +326,12 @@ function openMemberForm() {
         .classList.remove("hidden");
 }
 
-
 function closeMemberForm() {
 
     document
         .getElementById("memberModal")
         .classList.add("hidden");
 }
-
 
 async function addMember() {
 
@@ -375,6 +367,11 @@ async function addMember() {
 
     });
 
+    // Browser la yum save pannu - Vercel azhichalum irukkum
+    let saved = JSON.parse(localStorage.getItem("myMembers") || "[]");
+    saved.push({ id: Date.now(), name, email, phone });
+    localStorage.setItem("myMembers", JSON.stringify(saved));
+
     alert("Member added successfully! 👤");
 
     closeMemberForm();
@@ -383,7 +380,6 @@ async function addMember() {
 
     loadDashboard();
 }
-
 
 /* ================= ISSUE BOOK ================= */
 
@@ -414,14 +410,19 @@ async function loadBooksForIssue() {
         });
 }
 
-
 async function loadMembersForIssue() {
 
     const response =
         await fetch(`${API}/members`);
 
-    const members =
+    let members =
         await response.json();
+
+    // Browser members ah yum serthu kaatu
+    let saved = JSON.parse(localStorage.getItem("myMembers") || "[]");
+    saved.forEach(s => {
+        if (!members.find(m => m.email === s.email)) members.push(s);
+    });
 
     const select =
         document.getElementById("issueMember");
@@ -438,7 +439,6 @@ async function loadMembersForIssue() {
         `;
     });
 }
-
 
 async function issueBook() {
 
@@ -490,7 +490,6 @@ async function issueBook() {
         alert(data.message);
     }
 }
-
 
 /* ================= RETURN ================= */
 
@@ -563,7 +562,6 @@ async function loadTransactions() {
     });
 }
 
-
 async function returnBook(id) {
 
     const response =
@@ -599,7 +597,6 @@ async function returnBook(id) {
         alert(data.message);
     }
 }
-
 
 /* ================= REPORTS ================= */
 
